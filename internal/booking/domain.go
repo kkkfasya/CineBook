@@ -2,6 +2,7 @@ package booking
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -14,6 +15,7 @@ type Booking struct {
 	SeatID  string
 	UserID  string
 	Status  string // can we use enum for this?
+	ExpiresAt time.Time
 }
 
 type BookingStore interface {
