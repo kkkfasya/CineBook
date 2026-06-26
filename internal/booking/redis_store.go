@@ -1,6 +1,8 @@
 package booking
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -26,6 +28,27 @@ func sessionKey(id string) string {
 func (r *RedisStore) hold(b Booking) (Booking, error) {
 	id := uuid.New().String()
 	now := time.Now()
+	ctx := context.Background()
+	key := fmt.Sprintf("seat:%s:%s", b.MovieID, b.SeatID)
+	b.ID = id
+	val, err := json.Marshal(b)
+
+	if err != nil {
+		return Booking{}, err
+	}
+
+	status := r.rdb.SetArgs(ctx, key, val, redis.SetArgs{
+		Mode: "NX", // NX set if key not exist, otherwise ignore
+		TTL:  holdTTL,
+	})
+
+	if status.Val() != "OK" {
+		return Booking{}, ErrSeatAlreadyBooked
+	}
+
+	// XXX: is this needed since we have SetArgs already
+	// perhaps i should learn more about this redis client lib
+	r.rdb.Set(ctx, sessionKey(id), key, holdTTL)
 
 	return Booking{
 		ID:        id,
@@ -48,20 +71,7 @@ func (r *RedisStore) Book(b Booking) error {
 	return nil
 }
 
-func (m *RedisStore) ListBookings(movieID string) []Booking {
-	m.RLock()
-	defer m.Unlock()
-	var r []Booking
-
-	if len(m.bookings) == 0 {
-		return r
-	}
-
-	for _, b := range m.bookings {
-		if b.MovieID == movieID {
-			r = append(r, b)
-		}
-	}
-
-	return r
+// TODO: implement
+func (r *RedisStore) ListBookings(movieID string) []Booking {
+	return []Booking{}
 }
