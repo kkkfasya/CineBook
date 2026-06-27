@@ -50,6 +50,11 @@ func (r *RedisStore) hold(b Booking) (Booking, error) {
 	// perhaps i should learn more about this redis client lib
 	r.rdb.Set(ctx, sessionKey(id), key, holdTTL)
 
+	// NOTE: should i do this?? lol maybe later
+	// if r.rdb.SetArgs(ctx, sessionKey(id), key, redis.SetArgs{TTL: holdTTL}).Val() != "OK" {
+	// 	return Booking{}, ErrFailedToSetSessionKey
+	// }
+
 	return Booking{
 		ID:        id,
 		MovieID:   b.MovieID,

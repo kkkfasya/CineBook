@@ -7,11 +7,11 @@ import (
 
 	"github.com/google/uuid" // NOTE: i should probably read RFC9562 to understand this deeply
 
-	"github.com/kkkfasya/CineBook/internal/adapters/redis"
+	redis_adapter "github.com/kkkfasya/CineBook/internal/adapters/redis"
 )
 
 func TestConcurrentBooking_ExactlyOneWins(t *testing.T) {
-	store := NewRedisStore(redis.NewRedisClient("localhost:6379"))
+	store := NewRedisStore(redis_adapter.NewRedisClient("localhost:6379"))
 	svc := NewService(store)
 
 	const numGoroutines = 100_000 // didn't know you can seperate num like this in go

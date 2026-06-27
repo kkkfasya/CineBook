@@ -6,15 +6,16 @@ import (
 )
 
 var (
-	ErrSeatAlreadyBooked = errors.New("seat already taken")
+	ErrSeatAlreadyBooked     = errors.New("seat already taken")
+	ErrFailedToSetSessionKey = errors.New("failed to set session key")
 )
 
 type Booking struct {
-	ID      string
-	MovieID string
-	SeatID  string
-	UserID  string
-	Status  string // can we use enum for this?
+	ID        string
+	MovieID   string
+	SeatID    string
+	UserID    string
+	Status    string // can we use enum for this?
 	ExpiresAt time.Time
 }
 
