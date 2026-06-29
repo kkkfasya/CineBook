@@ -25,6 +25,21 @@ func sessionKey(id string) string {
 	return fmt.Sprintf("session:%s", id)
 }
 
+func parseSession(s string) (Booking, error) {
+	var data Booking
+	if err := json.Unmarshal([]byte(s), &data); err != nil {
+		return Booking{}, err
+	}
+
+	return Booking{
+		ID:      data.ID,
+		MovieID: data.MovieID,
+		SeatID:  data.SeatID,
+		UserID:  data.UserID,
+		Status:  data.Status,
+	}, nil
+}
+
 func (r *RedisStore) hold(b Booking) (Booking, error) {
 	id := uuid.New().String()
 	now := time.Now()
@@ -76,7 +91,21 @@ func (r *RedisStore) Book(b Booking) error {
 	return nil
 }
 
-// TODO: implement
 func (r *RedisStore) ListBookings(movieID string) []Booking {
-	return []Booking{}
+	pattern := fmt.Sprintf("seat:%s:*s", movieID)
+	var sessions []Booking
+	ctx := context.Background()
+
+	iter := r.rdb.Scan(ctx, 0, pattern, 0).Iterator()
+	for iter.Next(ctx) {
+		val, err := r.rdb.Get(ctx, iter.Val()).Result()
+		if err != nil {
+			continue
+		}
+
+		s, err := parseSession(val)
+		sessions = append(sessions, s)
+	}
+
+	return sessions
 }

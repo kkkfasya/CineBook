@@ -1,9 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/redis/go-redis/v9"
+
+	"github.com/kkkfasya/CineBook/internal/booking"
+	"github.com/kkkfasya/CineBook/internal/utils"
 )
 
 type movieResponse struct {
@@ -18,19 +22,22 @@ const PORT = ":8080"
 
 func main() {
 	mux := http.NewServeMux()
+	store := booking.NewRedisStore(
+		redis.NewClient(&redis.Options{Addr: "localhost:6379"}),
+	)
+	svc := booking.NewService(store)
+	handler := booking.NewHandler(svc)
 
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
-
-	mux.HandleFunc(
-		"GET /movies",
-		listMovies,
-	)
+	mux.HandleFunc("GET /movies", listMovies)
+	mux.HandleFunc("GET /movies/{movieID}/seats", handler.ListSeats)
 
 	if err := http.ListenAndServe(PORT, mux); err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 // yes we will hardcode it as for now
@@ -40,11 +47,5 @@ var movies = []movieResponse{
 }
 
 func listMovies(w http.ResponseWriter, r *http.Request) {
-	WriteJson(w, http.StatusOK, movies)
-}
-
-func WriteJson(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	utils.WriteJson(w, http.StatusOK, movies)
 }

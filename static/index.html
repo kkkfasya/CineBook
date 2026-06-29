@@ -500,7 +500,9 @@
           api(
             "POST",
             "/movies/" + selectedMovie.id + "/seats/" + seatID + "/hold",
-            { user_id: userID },
+            {
+              user_id: userID,
+            },
           )
             .then(function (data) {
               activeSession = {
