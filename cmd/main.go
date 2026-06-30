@@ -22,17 +22,21 @@ const PORT = ":8080"
 
 func main() {
 	mux := http.NewServeMux()
-	store := booking.NewRedisStore(
-		redis.NewClient(&redis.Options{Addr: "localhost:6379"}),
-	)
+	rclient := redis.NewClient(&redis.Options{Addr: "localhost:6379"}) // TODO: check when connected and also add retry system
+	store := booking.NewRedisStore(rclient)
 	svc := booking.NewService(store)
 	handler := booking.NewHandler(svc)
 
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
+
+	// GET
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 	mux.HandleFunc("GET /movies", listMovies)
 	mux.HandleFunc("GET /movies/{movieID}/seats", handler.ListSeats)
+
+	// POST
+	mux.HandleFunc("POST /movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
 
 	if err := http.ListenAndServe(PORT, mux); err != nil {
 		log.Fatal(err)

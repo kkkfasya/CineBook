@@ -80,19 +80,19 @@ func (r *RedisStore) hold(b Booking) (Booking, error) {
 	}, nil
 }
 
-func (r *RedisStore) Book(b Booking) error {
+func (r *RedisStore) Book(b Booking) (Booking, error) {
 	session, err := r.hold(b)
 	if err != nil {
-		return err
+		return Booking{}, err
 	}
 
 	log.Printf("session booked: %s", session)
 
-	return nil
+	return session, nil
 }
 
 func (r *RedisStore) ListBookings(movieID string) []Booking {
-	pattern := fmt.Sprintf("seat:%s:*s", movieID)
+	pattern := fmt.Sprintf("seat:%s:*", movieID)
 	var sessions []Booking
 	ctx := context.Background()
 

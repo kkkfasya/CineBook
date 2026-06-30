@@ -29,7 +29,7 @@ func (m *ConcurrentStore) Book(b Booking) error {
 
 func (m *ConcurrentStore) ListBookings(movieID string) []Booking {
 	m.RLock()
-	defer m.Unlock()
+	defer m.RUnlock()
 	var r []Booking
 
 	if len(m.bookings) == 0 {
