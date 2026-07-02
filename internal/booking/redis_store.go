@@ -91,6 +91,74 @@ func (r *RedisStore) Book(b Booking) (Booking, error) {
 	return session, nil
 }
 
+func (r *RedisStore) getSession(ctx context.Context, sessionID string, userID string) (Booking, string, error) {
+	sk, err := r.rdb.Get(ctx, sessionKey(sessionID)).Result()
+
+	if err != nil {
+		return Booking{}, "", err
+	}
+
+	val, err := r.rdb.Get(ctx, sk).Result()
+	if err != nil {
+		return Booking{}, "", err
+	}
+
+	s, err := parseSession(val)
+	if err != nil {
+		return Booking{}, "", err
+	}
+
+	return s, sk, nil
+}
+
+func (r *RedisStore) Confirm(ctx context.Context, sessionID string, userID string) (Booking, error) {
+	session, sk, err := r.getSession(ctx, sessionID, userID)
+	if err != nil {
+		return Booking{}, err
+	}
+
+	// persist removes TTL
+	type sessionResponse struct {
+		SessionID string `json:"session_id"`
+		MovieID   string `json:"movie_id"`
+		SeatID    string `json:"seat_id"`
+		UserID    string `json:"user_id"`
+		Status    string `json:"status"`
+		ExpiresAt string `json:"expires_at,omitempty"`
+	}
+	r.rdb.Persist(ctx, sk)
+	r.rdb.Persist(ctx, sessionKey(sessionID))
+
+	session.Status = "confirmed"
+
+	val, err := json.Marshal(Booking{
+		ID:      session.ID,
+		MovieID: session.MovieID,
+		SeatID:  session.SeatID,
+		UserID:  session.UserID,
+		Status:  session.Status,
+	})
+
+	if err != nil {
+		return Booking{}, err
+	}
+	r.rdb.Set(ctx, sk, val, 0)
+	return session, nil
+
+}
+
+func (r *RedisStore) Release(ctx context.Context, sessionID string, userID string) error {
+	_, sk, err := r.getSession(ctx, sessionID, userID)
+
+	if err != nil {
+		return err
+	}
+
+	r.rdb.Del(ctx, sk, sessionKey(sessionID))
+
+	return nil
+}
+
 func (r *RedisStore) ListBookings(movieID string) []Booking {
 	pattern := fmt.Sprintf("seat:%s:*", movieID)
 	var sessions []Booking

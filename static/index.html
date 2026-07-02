@@ -533,6 +533,7 @@
             })
             .catch(function (err) {
               showCheckoutStatus(err.message, "error");
+              console.log(activeSession)
             });
         }
 

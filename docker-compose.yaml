@@ -11,7 +11,7 @@ services:
     image: ghcr.io/joeferner/redis-commander:latest
     restart: always
     environment: 
-      - REDIS_HOSTS=local:redis:6379 # NOTE: it's plural bruhhh
+      - REDIS_HOSTS=local:redis:6379
     ports:
       - "8081:8081"
     user: redis

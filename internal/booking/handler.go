@@ -16,9 +16,22 @@ type handler struct {
 }
 
 type seatInfo struct {
+	SeatID string `json:"seat_id"`
+	UserID string `json:"user_id"`
+	Booked bool   `json:"booked"`
+}
+
+type holdSeatRequest struct {
+	UserID string `json:"user_id"`
+}
+
+type sessionResponse struct {
+	SessionID string `json:"session_id"`
+	MovieID   string `json:"movie_id"`
 	SeatID    string `json:"seat_id"`
 	UserID    string `json:"user_id"`
-	Booked    bool   `json:"booked"`
+	Status    string `json:"status"`
+	ExpiresAt string `json:"expires_at,omitempty"`
 }
 
 func NewHandler(svc *Service) *handler {
@@ -76,12 +89,60 @@ func (h *handler) ListSeats(w http.ResponseWriter, r *http.Request) {
 	// the FE only cares about this data
 	for _, b := range bookings {
 		seats = append(seats, seatInfo{
-			SeatID:    b.SeatID,
-			UserID:    b.UserID,
-			Booked:    true,
+			SeatID: b.SeatID,
+			UserID: b.UserID,
+			Booked: true,
 		})
 
 	}
 
 	utils.WriteJson(w, http.StatusOK, seats)
+}
+
+func (h *handler) ConfirmSession(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.PathValue("sessionID")
+
+	var req holdSeatRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return
+	}
+
+	if req.UserID == "" {
+		return
+	}
+
+	session, err := h.svc.ConfirmSeat(r.Context(), sessionID, req.UserID)
+	if err != nil {
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, sessionResponse{
+		SessionID: session.ID,
+		MovieID:   session.MovieID,
+		SeatID:    session.SeatID,
+		UserID:    req.UserID,
+		Status:    session.Status,
+	})
+
+}
+
+func (h *handler) ReleaseSession(w http.ResponseWriter, r *http.Request) {
+	var req holdSeatRequest
+	sid := r.PathValue("sessionID")
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return
+	}
+
+	if req.UserID == "" {
+		return
+	}
+
+	err := h.svc.ReleaseSeat(r.Context(), sid, req.UserID)
+	if err != nil {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
