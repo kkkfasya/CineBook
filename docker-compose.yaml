@@ -1,21 +1,28 @@
 services:
   redis:
     container_name: redis
-    image: redis:8-alpine # switch to 8 if no behaviour change
+    image: redis:8-alpine
     ports:  
       - "6379:6379"
+  
+  # NOTE: gonna keep it here just in case redis-insight acted up
+  # redis-commander:
+  #   container_name: redis-commander
+  #   hostname: redis-commander
+  #   image: ghcr.io/joeferner/redis-commander:latest
+  #   restart: always
+  #   environment: 
+  #     - REDIS_HOSTS=local:redis:6379
+  #   ports:
+  #     - "8081:8081"
+  #   user: redis
+  #   depends_on:
+  #     - redis
 
-  redis-commander:
-    container_name: redis-commander
-    hostname: redis-commander
-    image: ghcr.io/joeferner/redis-commander:latest
-    restart: always
-    environment: 
-      - REDIS_HOSTS=local:redis:6379
+  redis-insight:
+    container_name: redis-insight
+    image: redis/redisinsight:latest
     ports:
-      - "8081:8081"
-    user: redis
+      - "5540:5540"
     depends_on:
       - redis
-
-
