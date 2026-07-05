@@ -30,18 +30,14 @@ func main() {
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 
-	// GET
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 	mux.HandleFunc("GET /movies", listMovies)
 	mux.HandleFunc("GET /movies/{movieID}/seats", handler.ListSeats)
 
-	// POST
 	mux.HandleFunc("POST /movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
 
-	// PUT
 	mux.HandleFunc("PUT /sessions/{sessionID}/confirm", handler.ConfirmSession)
 
-	// // DELETE
 	mux.HandleFunc("DELETE /sessions/{sessionID}", handler.ReleaseSession)
 
 	if err := http.ListenAndServe(PORT, mux); err != nil {
