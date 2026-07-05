@@ -2,7 +2,6 @@ package booking
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -57,7 +56,7 @@ func (h *handler) HoldSeat(w http.ResponseWriter, r *http.Request) {
 
 	var req holdPayloadRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Println(err)
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -70,7 +69,7 @@ func (h *handler) HoldSeat(w http.ResponseWriter, r *http.Request) {
 	session, err := h.svc.Book(data)
 
 	if err != nil {
-		log.Println(err)
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -106,15 +105,18 @@ func (h *handler) ConfirmSession(w http.ResponseWriter, r *http.Request) {
 	var req holdSeatRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	if req.UserID == "" {
+		utils.WriteError(w, http.StatusBadRequest, ErrMissingUserID)
 		return
 	}
 
 	session, err := h.svc.ConfirmSeat(r.Context(), sessionID, req.UserID)
 	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -133,15 +135,18 @@ func (h *handler) ReleaseSession(w http.ResponseWriter, r *http.Request) {
 	sid := r.PathValue("sessionID")
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	if req.UserID == "" {
+		utils.WriteError(w, http.StatusBadRequest, ErrMissingUserID)
 		return
 	}
 
 	err := h.svc.ReleaseSeat(r.Context(), sid, req.UserID)
 	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 

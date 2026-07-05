@@ -9,6 +9,7 @@ import (
 var (
 	ErrSeatAlreadyBooked     = errors.New("seat already taken")
 	ErrFailedToSetSessionKey = errors.New("failed to set session key")
+	ErrMissingUserID         = errors.New("missing user_id field")
 )
 
 type Booking struct {

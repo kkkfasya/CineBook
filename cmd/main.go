@@ -14,7 +14,7 @@ type movieResponse struct {
 	ID          string `json:"id"`
 	Title       string `json:"title"`
 	Rows        uint8  `json:"rows"`
-	SeatsPerRow uint8  `json:"seats_per_row"` // NOTE: change this to columns after tutorial
+	SeatsPerRow uint8  `json:"seats_per_row"` // NOTE: change this to columns after tutorial, or should i?
 }
 
 // TODO: change any mention of the word `movie`  to `film` because i'm a cinephile
