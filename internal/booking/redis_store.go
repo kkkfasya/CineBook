@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const holdTTL = 2 * time.Minute
+const holdTTL = 1 * time.Minute
 
 type RedisStore struct {
 	rdb *redis.Client
@@ -25,7 +25,12 @@ func sessionKey(id string) string {
 	return fmt.Sprintf("session:%s", id)
 }
 
+func seatKey(movieID, seatID string) string {
+	return fmt.Sprintf("seat:%s:%s", movieID, seatID)
+}
+
 func parseSession(s string) (Booking, error) {
+
 	var data Booking
 	if err := json.Unmarshal([]byte(s), &data); err != nil {
 		return Booking{}, err
@@ -40,35 +45,37 @@ func parseSession(s string) (Booking, error) {
 	}, nil
 }
 
+// key & value
+//
+// sessionkey -> seatkey
+//
+// seatkey -> booking stuct
 func (r *RedisStore) hold(b Booking) (Booking, error) {
+
 	id := uuid.New().String()
+	b.ID = id
+
 	now := time.Now()
 	ctx := context.Background()
-	key := fmt.Sprintf("seat:%s:%s", b.MovieID, b.SeatID)
-	b.ID = id
-	val, err := json.Marshal(b)
+	seatKey := seatKey(b.MovieID, b.SeatID)
+	bookingVal, err := json.Marshal(b)
 
 	if err != nil {
 		return Booking{}, err
 	}
 
-	status := r.rdb.SetArgs(ctx, key, val, redis.SetArgs{
-		Mode: "NX", // NX set if key not exist, otherwise ignore
-		TTL:  holdTTL,
-	})
-
-	if status.Val() != "OK" {
-		return Booking{}, ErrSeatAlreadyBooked
+	if cmd := r.rdb.SetArgs(ctx, sessionKey(id), seatKey, redis.SetArgs{TTL: holdTTL}); cmd.Val() != "OK" {
+		log.Print(cmd.Val())
+		return Booking{}, ErrFailedToSetSessionKey
 	}
 
-	// XXX: is this needed since we have SetArgs already
-	// perhaps i should learn more about this redis client lib
-	r.rdb.Set(ctx, sessionKey(id), key, holdTTL)
-
-	// NOTE: should i do this?? lol maybe later
-	// if r.rdb.SetArgs(ctx, sessionKey(id), key, redis.SetArgs{TTL: holdTTL}).Val() != "OK" {
-	// 	return Booking{}, ErrFailedToSetSessionKey
-	// }
+	if cmd := r.rdb.SetArgs(ctx, seatKey, bookingVal, redis.SetArgs{
+		Mode: "NX", // NX set if key not exist, otherwise ignore
+		TTL:  holdTTL,
+	}); cmd.Val() != "OK" {
+		log.Print(cmd.Val())
+		return Booking{}, ErrSeatAlreadyBooked
+	}
 
 	return Booking{
 		ID:        id,
@@ -91,6 +98,7 @@ func (r *RedisStore) Book(b Booking) (Booking, error) {
 	return session, nil
 }
 
+// TODO: add validation for userID
 func (r *RedisStore) getSession(ctx context.Context, sessionID string, userID string) (Booking, string, error) {
 	sk, err := r.rdb.Get(ctx, sessionKey(sessionID)).Result()
 
