@@ -69,7 +69,7 @@
     releaseActiveSession();
     selectedMovie = movie;
     renderMovies();
-    document.getElementById("mainContent").style.display = "flex";
+    document.getElementById("mainContent").classList.remove("hidden");
     document.getElementById("checkoutArea").innerHTML = "";
     fetchSeats();
     startPolling();

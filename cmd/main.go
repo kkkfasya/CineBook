@@ -21,15 +21,14 @@ type movieResponse struct {
 const PORT = ":8080"
 
 func main() {
-	mux := http.NewServeMux()
 	rclient := redis.NewClient(&redis.Options{Addr: "localhost:6379"}) // TODO: check when connected and also add retry system
 	store := booking.NewRedisStore(rclient)
 	svc := booking.NewService(store)
 	handler := booking.NewHandler(svc)
 
+	mux := http.NewServeMux()
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
-
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 	mux.HandleFunc("GET /movies", listMovies)
 	mux.HandleFunc("GET /movies/{movieID}/seats", handler.ListSeats)
