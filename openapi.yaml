@@ -1,0 +1,250 @@
+openapi: "3.0.3"
+info:
+  title: CineBook API
+  description: Movie seat booking system backed by Redis
+  version: "0.1.0"
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /movies:
+    get:
+      summary: List available movies
+      operationId: listMovies
+      responses:
+        "200":
+          description: List of movies with seating layout
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+
+  /movies/{movieID}/seats:
+    get:
+      summary: List seat bookings for a movie
+      operationId: listSeats
+      parameters:
+        - name: movieID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of seat statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeatInfo"
+
+  /movies/{movieID}/seats/{seatID}/hold:
+    post:
+      summary: Hold a seat (starts a booking session)
+      operationId: holdSeat
+      parameters:
+        - name: movieID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: seatID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HoldSeatRequest"
+      responses:
+        "200":
+          description: Seat held successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HoldSeatResponse"
+        "400":
+          description: Bad request or seat already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /sessions/{sessionID}/confirm:
+    put:
+      summary: Confirm a held seat booking
+      operationId: confirmSession
+      parameters:
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HoldSeatRequest"
+      responses:
+        "200":
+          description: Session confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "400":
+          description: Bad request or session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /sessions/{sessionID}:
+    delete:
+      summary: Release a held seat (cancel booking session)
+      operationId: releaseSession
+      parameters:
+        - name: sessionID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HoldSeatRequest"
+      responses:
+        "204":
+          description: Session released, no content
+        "400":
+          description: Bad request or session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cb
+        title:
+          type: string
+          example: Call Boy
+        rows:
+          type: integer
+          example: 3
+        seats_per_row:
+          type: integer
+          example: 3
+      required:
+        - id
+        - title
+        - rows
+        - seats_per_row
+
+    SeatInfo:
+      type: object
+      properties:
+        seat_id:
+          type: string
+          example: A1
+        user_id:
+          type: string
+          example: a1b2c3d4e5f6
+        booked:
+          type: boolean
+          example: true
+        confirmed:
+          type: boolean
+          example: false
+      required:
+        - seat_id
+        - user_id
+        - booked
+        - confirmed
+
+    HoldSeatRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: a1b2c3d4e5f6
+      required:
+        - user_id
+
+    HoldSeatResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        movie_id:
+          type: string
+          example: cb
+        seat_id:
+          type: string
+          example: A1
+        expires_at:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the hold expires
+          example: "2026-07-08T12:34:56Z"
+      required:
+        - session_id
+        - movie_id
+        - seat_id
+        - expires_at
+
+    SessionResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        movie_id:
+          type: string
+        seat_id:
+          type: string
+        user_id:
+          type: string
+        status:
+          type: string
+          enum: [held, confirmed]
+          description: Current status of the session
+        expires_at:
+          type: string
+          format: date-time
+      required:
+        - session_id
+        - movie_id
+        - seat_id
+        - user_id
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: seat already taken
+      required:
+        - error
