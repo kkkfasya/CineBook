@@ -10,11 +10,8 @@ import (
 	redis_adapter "github.com/kkkfasya/CineBook/internal/adapters/redis"
 )
 
-func TestConcurrentBooking_ExactlyOneWins(t *testing.T) {
-	store := NewRedisStore(redis_adapter.NewRedisClient("localhost:6379"))
-	svc := NewService(store)
-
-	const numGoroutines = 100_000 // didn't know you can seperate num like this in go
+func runBookingConcurrencyTest(t *testing.T, svc Service) {
+	const numGoroutines = 100_000
 
 	var (
 		successes atomic.Int64
@@ -48,5 +45,32 @@ func TestConcurrentBooking_ExactlyOneWins(t *testing.T) {
 	}
 	if got := failures.Load(); got != int64(numGoroutines-1) {
 		t.Errorf("excpected %d failures, got %d", numGoroutines-1, got)
+	}
+
+}
+
+func TestConcurrentBooking_ExactlyOneWins(t *testing.T) {
+	tests := []struct {
+		name string
+		init func(t *testing.T) Service
+	}{
+		{
+			name: "redis store backend",
+			init: func(t *testing.T) Service {
+				if testing.Short() {
+					t.Skip("skipping redis store in short mode")
+				}
+				r := redis_adapter.NewRedisClient("localhost:6379")
+				store := NewRedisStore(r)
+				return *NewService(store)
+			},
+		},
+	}
+
+	for _, ts := range tests {
+		t.Run(ts.name, func(t *testing.T) {
+			svc := ts.init(t)
+			runBookingConcurrencyTest(t, svc)
+		})
 	}
 }
