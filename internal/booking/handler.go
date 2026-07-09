@@ -38,7 +38,6 @@ func NewHandler(svc *Service) *handler {
 	return &handler{svc: svc}
 }
 
-// TODO: handle err
 func (h *handler) HoldSeat(w http.ResponseWriter, r *http.Request) {
 	type holdPayloadRequest struct {
 		UserID string `json:"user_id"`

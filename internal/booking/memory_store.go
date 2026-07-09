@@ -1,5 +1,8 @@
 package booking
 
+// NOTE: this implementation is deliberately not concurrent safe for demonstration purpose
+// it is also not the most optimal implementation, for a better one, check concurrent_store.go
+
 type MemoryStore struct {
 	bookings map[string]Booking // go maps are't concurrent safe, race-condition is very possible
 }
@@ -28,7 +31,6 @@ func (m *MemoryStore) ListBookings(movieID string) []Booking {
 		return r
 	}
 
-	// O(n), TODO: try to implement O(1) version
 	for _, b := range m.bookings {
 		if b.MovieID == movieID {
 			r = append(r, b)

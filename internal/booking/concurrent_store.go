@@ -1,17 +1,21 @@
 package booking
 
-import "sync"
+import (
+	"sync"
+)
 
 // use Mutex for locking mechanism to prevent race condition
 // better yet use RWMutex if it's read-heavy or need multiple reader but one writer
 type ConcurrentStore struct {
-	bookings map[string]Booking
 	sync.RWMutex
+	bookings map[string]Booking
+	byMovie  map[string]map[string]struct{} // we use nested struct because removing it is O(1) instead of O(n)
 }
 
 func NewConcurrentStore() *ConcurrentStore {
 	return &ConcurrentStore{
 		bookings: map[string]Booking{},
+		byMovie:  map[string]map[string]struct{}{},
 	}
 }
 
@@ -24,23 +28,33 @@ func (m *ConcurrentStore) Book(b Booking) error {
 	}
 
 	m.bookings[b.SeatID] = b
+
+	if m.byMovie[b.MovieID] == nil {
+		m.byMovie[b.MovieID] = map[string]struct{}{}
+	}
+
+	m.byMovie[b.MovieID][b.SeatID] = struct{}{}
+
 	return nil
 }
 
 func (m *ConcurrentStore) ListBookings(movieID string) []Booking {
 	m.RLock()
 	defer m.RUnlock()
-	var r []Booking
 
-	if len(m.bookings) == 0 {
-		return r
+	seatIDs, exists := m.byMovie[movieID]
+	if !exists || len(seatIDs) == 0 {
+		return nil
 	}
 
-	for _, b := range m.bookings {
-		if b.MovieID == movieID {
+	r := make([]Booking, 0, len(seatIDs))
+
+	for sid := range seatIDs {
+		if b, found := m.bookings[sid]; found {
 			r = append(r, b)
 		}
 	}
 
 	return r
+
 }
