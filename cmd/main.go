@@ -37,6 +37,7 @@ func main() {
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
+	mux.Handle("GET /admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("static_2"))))
 	mux.HandleFunc("GET /api/v1/movies", listMovies)
 	mux.HandleFunc("GET /api/v1/movies/{movieID}/seats", handler.ListSeats)
 	mux.HandleFunc("POST /api/v1/movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
@@ -84,7 +85,7 @@ func redisPing(client *redis.Client, maxAttempts int, backoffSec time.Duration) 
 // yes we will hardcode it as for now
 var movies = []movieResponse{
 	{ID: "cb", Title: "Call Boy", Rows: 3, SeatsPerRow: 3},
-	{ID: "as", Title: "A Separation", Rows: 6, SeatsPerRow: 6},
+	{ID: "mhs", Title: "Un homme qui dort", Rows: 6, SeatsPerRow: 6},
 }
 
 func listMovies(w http.ResponseWriter, r *http.Request) {

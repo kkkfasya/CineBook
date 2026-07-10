@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Admin</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Movie Admin</h1>
+    </header>
+
+    <div class="toolbar">
+      <button class="btn btn--accent" id="btnAdd">+ Add Movie</button>
+    </div>
+
+    <div class="movie-grid" id="movieGrid"></div>
+
+    <div class="overlay hidden" id="overlay">
+      <div class="modal" id="modal">
+        <h2 id="modalTitle">Add Movie</h2>
+        <form id="movieForm">
+          <input type="hidden" id="movieId" />
+
+          <label class="field">
+            <span>Name</span>
+            <input type="text" id="inputName" required />
+          </label>
+
+          <label class="field">
+            <span>Poster URL</span>
+            <input type="url" id="inputPoster" placeholder="https://..." />
+          </label>
+
+          <label class="field">
+            <span>Length (sec)</span>
+            <input type="number" id="inputLength" min="1" required />
+          </label>
+
+          <label class="field">
+            <span>Seat Rows</span>
+            <input type="number" id="inputRows" min="1" required />
+          </label>
+
+          <label class="field">
+            <span>Seats per Row</span>
+            <input type="number" id="inputSeatsPerRow" min="1" required />
+          </label>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn btn--confirm" id="btnSave">Save</button>
+            <button type="button" class="btn btn--release" id="btnCancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
