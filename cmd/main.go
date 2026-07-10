@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/kkkfasya/CineBook/internal/booking"
+	mw "github.com/kkkfasya/CineBook/internal/middleware"
 	"github.com/kkkfasya/CineBook/internal/utils"
 )
 
@@ -20,7 +21,6 @@ type movieResponse struct {
 	SeatsPerRow uint8  `json:"seats_per_row"`
 }
 
-// TODO: change any mention of the word `movie`  to `film` because i'm a cinephile
 const PORT = ":8080"
 
 func main() {
@@ -38,10 +38,15 @@ func main() {
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 	fs := http.FileServer(http.Dir("static"))
 	mux.Handle("GET /", fs)
-	mux.Handle("GET /admin", http.RedirectHandler("/admin.html", http.StatusMovedPermanently))
-	mux.Handle("GET /admin/", http.RedirectHandler("/admin.html", http.StatusMovedPermanently))
-	mux.Handle("GET /login", http.RedirectHandler("/login.html", http.StatusMovedPermanently))
-	mux.Handle("GET /login/", http.RedirectHandler("/login.html", http.StatusMovedPermanently))
+
+	// TODO: add redirect for normal user here
+	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/admin.html")
+	})
+	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/login.html")
+	})
+
 	mux.HandleFunc("GET /api/v1/movies", listMovies)
 	mux.HandleFunc("GET /api/v1/movies/{movieID}/seats", handler.ListSeats)
 	mux.HandleFunc("POST /api/v1/movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
@@ -49,7 +54,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/v1/sessions/{sessionID}", handler.ReleaseSession)
 
 	log.Printf("server started at http://localhost%s\n", PORT)
-	if err := http.ListenAndServe(PORT, mux); err != nil {
+	if err := http.ListenAndServe(PORT, mw.StripTrailingSlash(mux)); err != nil {
 		log.Printf("server at localhost:%s failed\n", PORT)
 		log.Fatal(err)
 	}
