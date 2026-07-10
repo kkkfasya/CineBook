@@ -36,8 +36,12 @@ func main() {
 
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
-	mux.Handle("GET /", http.FileServer(http.Dir("static")))
-	mux.Handle("GET /admin/", http.StripPrefix("/admin/", http.FileServer(http.Dir("static_2"))))
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("GET /", fs)
+	mux.Handle("GET /admin", http.RedirectHandler("/admin.html", http.StatusMovedPermanently))
+	mux.Handle("GET /admin/", http.RedirectHandler("/admin.html", http.StatusMovedPermanently))
+	mux.Handle("GET /login", http.RedirectHandler("/login.html", http.StatusMovedPermanently))
+	mux.Handle("GET /login/", http.RedirectHandler("/login.html", http.StatusMovedPermanently))
 	mux.HandleFunc("GET /api/v1/movies", listMovies)
 	mux.HandleFunc("GET /api/v1/movies/{movieID}/seats", handler.ListSeats)
 	mux.HandleFunc("POST /api/v1/movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)

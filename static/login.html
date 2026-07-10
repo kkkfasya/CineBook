@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — CineBook</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>CineBook</h1>
+      <nav>
+        <a href="/">Booking</a>
+      </nav>
+    </header>
+
+    <div class="login-wrapper">
+      <div class="login-card">
+        <p class="login-subtitle">Sign in to continue</p>
+        <form id="loginForm">
+          <label class="field">
+            <span>Username</span>
+            <input type="text" id="inputUsername" autocomplete="username" required />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input type="password" id="inputPassword" autocomplete="current-password" required />
+          </label>
+          <button type="submit" class="btn btn--accent">Sign In</button>
+        </form>
+        <div class="login-error hidden" id="loginError"></div>
+      </div>
+    </div>
+
+    <script src="./script.js"></script>
+    <script src="./login.js"></script>
+  </body>
+</html>

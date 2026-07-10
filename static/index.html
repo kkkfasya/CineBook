@@ -9,50 +9,30 @@
   <body>
     <header>
       <h1>Cinema Booking</h1>
-      <div class="user-id" id="userBadge"></div>
+      <nav>
+        <span class="user-badge" id="userBadge"></span>
+        <a href="/login">Admin Login</a>
+      </nav>
     </header>
 
     <div class="movies" id="movieList"></div>
 
-    <div class="content hidden" id="mainContent">
+    <div class="booking-content hidden" id="mainContent">
       <div class="screen-area">
         <div class="screen-label">Screen</div>
         <div class="screen-bar"></div>
         <div class="seat-grid" id="seatGrid"></div>
         <div class="legend">
-          <div class="legend-item">
-            <div
-              class="legend-swatch"
-              style="background: var(--available)"
-            ></div>
-            Available
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-swatch"
-              style="background: var(--held-mine)"
-            ></div>
-            Your hold
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-swatch"
-              style="background: var(--held-other)"
-            ></div>
-            Other hold
-          </div>
-          <div class="legend-item">
-            <div
-              class="legend-swatch"
-              style="background: var(--confirmed)"
-            ></div>
-            Confirmed
-          </div>
+          <div class="legend-item"><div class="legend-swatch" style="background: var(--available)"></div> Available</div>
+          <div class="legend-item"><div class="legend-swatch" style="background: var(--held-mine)"></div> Your hold</div>
+          <div class="legend-item"><div class="legend-swatch" style="background: var(--held-other)"></div> Other hold</div>
+          <div class="legend-item"><div class="legend-swatch" style="background: var(--confirmed)"></div> Confirmed</div>
         </div>
       </div>
       <div id="checkoutArea"></div>
     </div>
 
     <script src="./script.js"></script>
+    <script src="./booking.js"></script>
   </body>
 </html>
