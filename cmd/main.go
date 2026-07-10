@@ -33,19 +33,19 @@ func main() {
 	handler := booking.NewHandler(svc)
 
 	mux := http.NewServeMux()
+
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
-	mux.HandleFunc("GET /movies", listMovies)
-	mux.HandleFunc("GET /movies/{movieID}/seats", handler.ListSeats)
+	mux.HandleFunc("GET /api/v1/movies", listMovies)
+	mux.HandleFunc("GET /api/v1/movies/{movieID}/seats", handler.ListSeats)
+	mux.HandleFunc("POST /api/v1/movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
+	mux.HandleFunc("PUT /api/v1/sessions/{sessionID}/confirm", handler.ConfirmSession)
+	mux.HandleFunc("DELETE /api/v1/sessions/{sessionID}", handler.ReleaseSession)
 
-	mux.HandleFunc("POST /movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
-
-	mux.HandleFunc("PUT /sessions/{sessionID}/confirm", handler.ConfirmSession)
-
-	mux.HandleFunc("DELETE /sessions/{sessionID}", handler.ReleaseSession)
-
+	log.Printf("server started at http://localhost%s\n", PORT)
 	if err := http.ListenAndServe(PORT, mux); err != nil {
+		log.Printf("server at localhost:%s failed\n", PORT)
 		log.Fatal(err)
 	}
 

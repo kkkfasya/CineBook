@@ -28,7 +28,7 @@
   // --- Movie list ---
 
   function loadMovies() {
-    api("GET", "/movies").then(function (data) {
+    api("GET", "/api/v1/movies").then(function (data) {
       movies = data;
       renderMovies();
     });
@@ -62,7 +62,7 @@
     clearTimerInterval();
     activeSession = null;
     document.getElementById("checkoutArea").innerHTML = "";
-    return api("DELETE", "/sessions/" + sid, { user_id: userID }).catch(function () {});
+    return api("DELETE", "/api/v1/sessions/" + sid, { user_id: userID }).catch(function () {});
   }
 
   function selectMovie(movie) {
@@ -79,7 +79,7 @@
 
   function fetchSeats() {
     if (!selectedMovie) return;
-    api("GET", "/movies/" + selectedMovie.id + "/seats").then(function (seats) {
+    api("GET", "/api/v1/movies/" + selectedMovie.id + "/seats").then(function (seats) {
       renderGrid(seats);
     });
   }
@@ -140,7 +140,7 @@
 
   function holdSeat(seatID) {
     if (activeSession) return; // already holding a seat
-    api("POST", "/movies/" + selectedMovie.id + "/seats/" + seatID + "/hold", {
+    api("POST", "/api/v1/movies/" + selectedMovie.id + "/seats/" + seatID + "/hold", {
       user_id: userID,
     })
       .then(function (data) {
@@ -161,7 +161,7 @@
 
   function confirmSeat() {
     if (!activeSession) return;
-    api("PUT", "/sessions/" + activeSession.sessionID + "/confirm", {
+    api("PUT", "/api/v1/sessions/" + activeSession.sessionID + "/confirm", {
       user_id: userID,
     })
       .then(function () {
@@ -178,7 +178,7 @@
 
   function releaseSeat() {
     if (!activeSession) return;
-    api("DELETE", "/sessions/" + activeSession.sessionID, {
+    api("DELETE", "/api/v1/sessions/" + activeSession.sessionID, {
       user_id: userID,
     })
       .then(function () {
