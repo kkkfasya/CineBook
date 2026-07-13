@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"database/sql"
 	"github.com/kkkfasya/CineBook/internal/utils"
 )
 
@@ -150,4 +151,12 @@ func (h *handler) ReleaseSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *handler) ListMovies(db *sql.DB) http.Handler {
+	// take movie list from db
+	// return it
+	// movies :=
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 }
