@@ -18,10 +18,16 @@ const PORT = ":8080"
 
 func main() {
 	db, err := sql.Open("sqlite3", "movies.db")
-	CreateMovieDB(db)
-
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	defer db.Close()
+	if err := CreateMovieDB(db); err != nil {
+		log.Print(err)
+	}
+	if err := SeedMovieDB(db); err != nil {
+		log.Print(err)
 	}
 
 	rclient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})

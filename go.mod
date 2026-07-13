@@ -8,6 +8,7 @@ require (
 	github.com/ncruces/go-sqlite3 v0.35.2
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/redis/go-redis/v9 v9.21.0
+	golang.org/x/crypto v0.53.0
 )
 
 require (
