@@ -11,6 +11,7 @@ import (
 	"github.com/kkkfasya/CineBook/internal/utils"
 
 	"database/sql"
+
 	_ "github.com/ncruces/go-sqlite3/driver"
 )
 
