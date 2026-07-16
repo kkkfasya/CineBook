@@ -2,12 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"log"
-	"os"
 
 	_ "github.com/ncruces/go-sqlite3/driver"
 
-	"github.com/joho/godotenv"
 	"github.com/kkkfasya/CineBook/internal/utils"
 	"github.com/oklog/ulid/v2"
 )
@@ -33,17 +30,10 @@ func CreateMovieDB(db *sql.DB) error {
 }
 
 func SeedMovieDB(db *sql.DB) error {
-	godotenv.Load()
-	adminUsername := os.Getenv("ADMIN_USERNAME")
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
-
-	if adminUsername == "" || adminPassword == "" {
-		log.Print("either ADMIN_USERNAME or ADMIN_PASSWORD .env is empty")
-		log.Print("[WARNING]: resorting to default ADMIN_USERNAME=admin123 and ADMIN_PASSWORD=admin123")
-		adminUsername = "admin123"
-		adminPassword, _ = utils.HashPassword("admin123") // i know the password is obvious but it's just best practice okay??
-	} else {
-		adminPassword, _ = utils.HashPassword(adminPassword)
+	adminUsername, adminPassword := utils.GetAdminCredsEnv()
+	adminPassword, err := utils.HashPassword(adminPassword)
+	if err != nil {
+		return err
 	}
 
 	seeds := []struct {
@@ -89,4 +79,3 @@ func SeedMovieDB(db *sql.DB) error {
 
 	return tx.Commit()
 }
-

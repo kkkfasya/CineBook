@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -59,4 +61,17 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func GetAdminCredsEnv() (adminUsername, adminPassword string) {
+	godotenv.Load()
+	adminUsername = os.Getenv("ADMIN_USERNAME")
+	adminPassword = os.Getenv("ADMIN_PASSWORD")
+
+	if adminUsername == "" || adminPassword == "" {
+		log.Print("either ADMIN_USERNAME or ADMIN_PASSWORD .env is empty")
+		log.Print("[WARNING]: resorting to default ADMIN_USERNAME=admin123 and ADMIN_PASSWORD=admin123")
+		return "admin123", "admin123"
+	}
+	return adminUsername, adminPassword
 }
