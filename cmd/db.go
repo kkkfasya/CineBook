@@ -5,21 +5,12 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/crypto/bcrypt"
-
 	_ "github.com/ncruces/go-sqlite3/driver"
 
 	"github.com/joho/godotenv"
+	"github.com/kkkfasya/CineBook/internal/utils"
 	"github.com/oklog/ulid/v2"
 )
-
-type MovieResponse struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Poster      string `json:"poster"`
-	Rows        uint8  `json:"rows"`
-	SeatsPerRow uint8  `json:"seats_per_row"`
-}
 
 func CreateMovieDB(db *sql.DB) error {
 	if _, err := db.Exec(`
@@ -50,9 +41,9 @@ func SeedMovieDB(db *sql.DB) error {
 		log.Print("either ADMIN_USERNAME or ADMIN_PASSWORD .env is empty")
 		log.Print("[WARNING]: resorting to default ADMIN_USERNAME=admin123 and ADMIN_PASSWORD=admin123")
 		adminUsername = "admin123"
-		adminPassword, _ = HashPassword("admin123") // i know the password is obvious but it's just best practice okay??
+		adminPassword, _ = utils.HashPassword("admin123") // i know the password is obvious but it's just best practice okay??
 	} else {
-		adminPassword, _ = HashPassword(adminPassword)
+		adminPassword, _ = utils.HashPassword(adminPassword)
 	}
 
 	seeds := []struct {
@@ -99,13 +90,3 @@ func SeedMovieDB(db *sql.DB) error {
 	return tx.Commit()
 }
 
-// TODO: NOTE: we should probably moves this to utils
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}

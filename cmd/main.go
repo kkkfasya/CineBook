@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/redis/go-redis/v9"
 
@@ -16,8 +17,10 @@ import (
 )
 
 const PORT = ":8080"
+const DB_NAME = "movies.db"
 
 func main() {
+	os.Remove("movies.db") // in-memory does not work somehow
 	db, err := sql.Open("sqlite3", "movies.db")
 	if err != nil {
 		log.Fatal(err)
@@ -25,10 +28,10 @@ func main() {
 
 	defer db.Close()
 	if err := CreateMovieDB(db); err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
 	if err := SeedMovieDB(db); err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
 
 	rclient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
@@ -54,7 +57,12 @@ func main() {
 		http.ServeFile(w, r, "static/login.html")
 	})
 
-	mux.HandleFunc("GET /api/v1/movies", listMovies)
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.Handle("GET /api/v1/movies", handler.ListMovies(db))
+
 	mux.HandleFunc("GET /api/v1/movies/{movieID}/seats", handler.ListSeats)
 	mux.HandleFunc("POST /api/v1/movies/{movieID}/seats/{seatID}/hold", handler.HoldSeat)
 	mux.HandleFunc("PUT /api/v1/sessions/{sessionID}/confirm", handler.ConfirmSession)
@@ -65,15 +73,4 @@ func main() {
 		log.Printf("server at localhost:%s failed\n", PORT)
 		log.Fatal(err)
 	}
-
-}
-
-// yes we will hardcode it as for now
-var movies = []MovieResponse{
-	{ID: "cb", Title: "Call Boy", Rows: 3, SeatsPerRow: 3},
-	{ID: "mhs", Title: "Un homme qui dort", Rows: 6, SeatsPerRow: 6},
-}
-
-func listMovies(w http.ResponseWriter, r *http.Request) {
-	utils.WriteJson(w, http.StatusOK, movies)
 }
