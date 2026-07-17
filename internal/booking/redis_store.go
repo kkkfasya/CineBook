@@ -93,7 +93,7 @@ func (r *RedisStore) Book(b Booking) (Booking, error) {
 		return Booking{}, err
 	}
 
-	log.Printf("session booked: %s", session)
+	log.Printf("%s session booked: %s", session.SeatID, session)
 
 	return session, nil
 }

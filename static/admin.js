@@ -7,9 +7,8 @@
   var modalTitle = document.getElementById("modalTitle");
   var form = document.getElementById("movieForm");
   var movieId = document.getElementById("movieId");
-  var inputName = document.getElementById("inputName");
+  var inputTitle = document.getElementById("inputTitle");
   var inputPoster = document.getElementById("inputPoster");
-  var inputLength = document.getElementById("inputLength");
   var inputRows = document.getElementById("inputRows");
   var inputSeatsPerRow = document.getElementById("inputSeatsPerRow");
 
@@ -61,11 +60,11 @@
       var card = document.createElement("div");
       card.className = "admin-card";
 
-      if (m.movie_poster) {
+      if (m.poster) {
         var img = document.createElement("img");
         img.className = "admin-poster";
-        img.src = m.movie_poster;
-        img.alt = m.movie_name;
+        img.src = m.poster;
+        img.alt = m.title;
         img.onerror = function () {
           img.style.display = "none";
           var ph = document.createElement("div");
@@ -83,16 +82,13 @@
 
       var nameEl = document.createElement("div");
       nameEl.className = "admin-name";
-      nameEl.textContent = m.movie_name;
+      nameEl.textContent = m.title;
       card.appendChild(nameEl);
 
       var meta = document.createElement("div");
       meta.className = "admin-meta";
-      var mins = Math.floor(m.movie_length_sec / 60);
-      var secs = m.movie_length_sec % 60;
       meta.innerHTML =
-        "<span>" + mins + "m " + secs + "s</span>" +
-        "<span>" + m.movie_seat_row + " rows &times; " + m.movie_seat_per_row + " seats</span>";
+        "<span>" + m.rows + " rows &times; " + m.seats_per_row + " seats</span>";
       card.appendChild(meta);
 
       var actions = document.createElement("div");
@@ -129,11 +125,10 @@
     editingId = m.id;
     modalTitle.textContent = "Edit Movie";
     movieId.value = m.id;
-    inputName.value = m.movie_name || "";
-    inputPoster.value = m.movie_poster || "";
-    inputLength.value = m.movie_length_sec || "";
-    inputRows.value = m.movie_seat_row || "";
-    inputSeatsPerRow.value = m.movie_seat_per_row || "";
+    inputTitle.value = m.title || "";
+    inputPoster.value = m.poster || "";
+    inputRows.value = m.rows || "";
+    inputSeatsPerRow.value = m.seats_per_row || "";
     overlay.classList.remove("hidden");
   }
 
@@ -145,13 +140,12 @@
   function saveMovie(e) {
     e.preventDefault();
     var data = {
-      movie_name: inputName.value.trim(),
-      movie_poster: inputPoster.value.trim() || undefined,
-      movie_length_sec: parseInt(inputLength.value, 10),
-      movie_seat_row: parseInt(inputRows.value, 10),
-      movie_seat_per_row: parseInt(inputSeatsPerRow.value, 10),
+      title: inputTitle.value.trim(),
+      poster: inputPoster.value.trim() || undefined,
+      rows: parseInt(inputRows.value, 10),
+      seats_per_row: parseInt(inputSeatsPerRow.value, 10),
     };
-    if (!data.movie_name) return;
+    if (!data.title) return;
     if (editingId) updateMovie(editingId, data);
     else createMovie(data);
   }

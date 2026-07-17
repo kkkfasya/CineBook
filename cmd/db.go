@@ -2,10 +2,7 @@ package main
 
 import (
 	"database/sql"
-
 	_ "github.com/ncruces/go-sqlite3/driver"
-
-	"github.com/kkkfasya/CineBook/internal/utils"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -18,10 +15,6 @@ func CreateMovieDB(db *sql.DB) error {
 		rows 			INTEGER NOT NULL,
 		seats_per_row 	INTEGER NOT NULL
 	);
-	CREATE TABLE IF NOT EXISTS admin (
-		username 	TEXT PRIMARY KEY,
-		password 	TEXT NOT NULL
-	);
 	`); err != nil {
 		return err
 	}
@@ -30,12 +23,6 @@ func CreateMovieDB(db *sql.DB) error {
 }
 
 func SeedMovieDB(db *sql.DB) error {
-	adminUsername, adminPassword := utils.GetAdminCredsEnv()
-	adminPassword, err := utils.HashPassword(adminPassword)
-	if err != nil {
-		return err
-	}
-
 	seeds := []struct {
 		Title  string
 		Poster string
@@ -68,14 +55,5 @@ func SeedMovieDB(db *sql.DB) error {
 			return err
 		}
 	}
-
-	stmt2, err := db.Prepare(`INSERT INTO admin (username, password) VALUES (?, ?)`)
-	if err != nil {
-		return err
-	}
-	defer stmt2.Close()
-
-	stmt2.Exec(adminUsername, adminPassword)
-
 	return tx.Commit()
 }

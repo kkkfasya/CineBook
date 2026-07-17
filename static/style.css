@@ -433,7 +433,7 @@ header nav a:hover {
 
 .admin-poster {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: 4px;
   background: var(--available);
@@ -441,7 +441,7 @@ header nav a:hover {
 
 .admin-poster--empty {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2 / 3;
   border-radius: 4px;
   background: var(--available);
   display: flex;

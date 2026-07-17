@@ -11,7 +11,6 @@
       <h1>Movie Admin</h1>
       <nav>
         <a href="/">Booking</a>
-        <a href="/login">Login</a>
       </nav>
     </header>
 
@@ -26,10 +25,9 @@
         <h2 id="modalTitle">Add Movie</h2>
         <form id="movieForm">
           <input type="hidden" id="movieId" />
-          <label class="field"><span>Name</span><input type="text" id="inputName" required /></label>
+          <label class="field"><span>Title</span><input type="text" id="inputTitle" required /></label>
           <label class="field"><span>Poster URL</span><input type="url" id="inputPoster" placeholder="https://..." /></label>
-          <label class="field"><span>Length (sec)</span><input type="number" id="inputLength" min="1" required /></label>
-          <label class="field"><span>Seat Rows</span><input type="number" id="inputRows" min="1" required /></label>
+          <label class="field"><span>Rows</span><input type="number" id="inputRows" min="1" required /></label>
           <label class="field"><span>Seats per Row</span><input type="number" id="inputSeatsPerRow" min="1" required /></label>
           <div class="modal-actions">
             <button type="submit" class="btn btn--confirm" id="btnSave">Save</button>

@@ -22,6 +22,16 @@ type MovieResponse struct {
 	SeatsPerRow uint8  `json:"seats_per_row"`
 }
 
+type adminCreds struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type adminSession struct {
+	username string
+	expiry   time.Time
+}
+
 type handler struct {
 	svc *Service
 }
@@ -46,6 +56,13 @@ type sessionResponse struct {
 	ExpiresAt string `json:"expires_at,omitempty"`
 }
 
+type holdResponse struct {
+	SessionID string `json:"session_id"`
+	MovieID   string `json:"movie_id"`
+	SeatID    string `json:"seat_id"`
+	ExpiresAt string `json:"expires_at"`
+}
+
 func NewHandler(svc *Service) *handler {
 	return &handler{svc: svc}
 }
@@ -53,13 +70,6 @@ func NewHandler(svc *Service) *handler {
 func (h *handler) HoldSeat(w http.ResponseWriter, r *http.Request) {
 	type holdPayloadRequest struct {
 		UserID string `json:"user_id"`
-	}
-
-	type holdResponse struct {
-		SessionID string `json:"session_id"`
-		MovieID   string `json:"movie_id"`
-		SeatID    string `json:"seat_id"`
-		ExpiresAt string `json:"expires_at"`
 	}
 
 	movieID := r.PathValue("movieID")

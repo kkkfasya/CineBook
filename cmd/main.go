@@ -44,14 +44,14 @@ func main() {
 	handler := booking.NewHandler(svc)
 
 	mux := http.NewServeMux()
-	adminAuth := mw.BasicAuth(utils.GetAdminCredsEnv())
+	// authGuard := mw.RequiresAdmin()
+	basicAuth := mw.BasicAuth(utils.GetAdminCredsEnv())
 
 	//TODO: use go embed to serve this static file
 	// https://oneuptime.com/blog/post/2026-01-25-bundle-static-assets-go-embed/view
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 
-	// TODO: add redirect for normal user here
-	mux.Handle("GET /admin", adminAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("GET /admin", basicAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/admin.html")
 	})))
 
@@ -70,15 +70,8 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/sessions/{sessionID}/confirm", handler.ConfirmSession)
 	mux.HandleFunc("DELETE /api/v1/sessions/{sessionID}", handler.ReleaseSession)
 
-	// login
-	mux.HandleFunc("POST /api/v1/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	})
-
 	// admin movies CRUD
-	mux.HandleFunc("GET /api/v1/admin/movies", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	})
+	mux.Handle("GET /api/v1/admin/movies", handler.ListMovies(db))
 	mux.HandleFunc("POST /api/v1/admin/movies", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotImplemented)
 	})
