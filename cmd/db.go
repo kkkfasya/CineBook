@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/ncruces/go-sqlite3/driver"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -40,7 +39,7 @@ func SeedMovieDB(db *sql.DB) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := db.Prepare(`
+	stmt, err := tx.Prepare(`
 	INSERT INTO movie  (id, title, poster, rows, seats_per_row)
 	VALUES (?, ?, ?, ?, ?)`)
 

@@ -2,6 +2,7 @@ package booking
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -9,9 +10,16 @@ import (
 	"database/sql"
 
 	"github.com/kkkfasya/CineBook/internal/utils"
+	"github.com/oklog/ulid/v2"
 )
 
-// TODO:show film poster to FE
+var (
+	errFailedMovieCreate = errors.New("failed to add movie")
+	errFailedMovieUpdate = errors.New("failed to update movie")
+	errFailedMovieRead   = errors.New("failed to read movie")
+	errFailedMovieDelete = errors.New("failed to delete movie")
+	errMovieNotFound     = errors.New("movie not found")
+)
 
 // TIL this is called DTO (Data Transfer Object)
 type MovieResponse struct {
@@ -20,16 +28,6 @@ type MovieResponse struct {
 	Poster      string `json:"poster"`
 	Rows        uint8  `json:"rows"`
 	SeatsPerRow uint8  `json:"seats_per_row"`
-}
-
-type adminCreds struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type adminSession struct {
-	username string
-	expiry   time.Time
 }
 
 type handler struct {
@@ -41,10 +39,6 @@ type seatInfo struct {
 	UserID    string `json:"user_id"`
 	Booked    bool   `json:"booked"`
 	Confirmed bool   `json:"confirmed"`
-}
-
-type holdSeatRequest struct {
-	UserID string `json:"user_id"`
 }
 
 type sessionResponse struct {
@@ -61,6 +55,17 @@ type holdResponse struct {
 	MovieID   string `json:"movie_id"`
 	SeatID    string `json:"seat_id"`
 	ExpiresAt string `json:"expires_at"`
+}
+
+type holdSeatRequest struct {
+	UserID string `json:"user_id"`
+}
+
+type movieRequest struct {
+	Title       string `json:"title"`
+	Poster      string `json:"poster"`
+	Rows        int    `json:"rows"`
+	SeatsPerRow int    `json:"seats_per_row"`
 }
 
 func NewHandler(svc *Service) *handler {
@@ -179,7 +184,8 @@ func (h *handler) ListMovies(db *sql.DB) http.Handler {
 		movies := []MovieResponse{}
 		rows, err := db.QueryContext(r.Context(), "SELECT * FROM movie") // always use QueryContext in http request setting
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieRead)
 			return
 		}
 		defer rows.Close()
@@ -188,17 +194,101 @@ func (h *handler) ListMovies(db *sql.DB) http.Handler {
 		for rows.Next() {
 			var m MovieResponse
 			if err := rows.Scan(&m.ID, &m.Title, &m.Poster, &m.Rows, &m.SeatsPerRow); err != nil {
-				utils.WriteError(w, http.StatusInternalServerError, err)
+				log.Print(err)
+				utils.WriteError(w, http.StatusInternalServerError, errFailedMovieRead)
 				return
 			}
 			movies = append(movies, m)
 		}
 
 		if err := rows.Err(); err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieRead)
 			return
 		}
-		log.Print(movies)
 		utils.WriteJson(w, http.StatusOK, movies)
+	})
+}
+
+// ideally movieID is returned so frontend can do something extra with it
+// our frontend is very bare minimum so it's not needed
+func (h *handler) AddMovie(db *sql.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req movieRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusBadRequest, errFailedMovieCreate)
+			return
+		}
+		movID := ulid.Make().String()
+		if _, err := db.ExecContext(r.Context(), `
+		INSERT INTO movie (id, title, poster, rows, seats_per_row)
+		VALUES (?,?,?,?,?);
+		`, movID, req.Title, req.Poster, req.Rows, req.SeatsPerRow); err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieCreate)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func (h *handler) DeleteMovie(db *sql.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		movID := r.PathValue("movieID")
+		res, err := db.ExecContext(r.Context(), `
+		DELETE FROM movie
+		WHERE id = ?; `, movID)
+
+		if err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieDelete)
+			return
+		}
+
+		rowsaffected, err := res.RowsAffected()
+		if err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieDelete)
+			return
+		}
+		if rowsaffected == 0 {
+			utils.WriteError(w, http.StatusInternalServerError, errMovieNotFound)
+		}
+	})
+}
+
+func (h *handler) UpdateMovie(db *sql.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req movieRequest
+		movID := r.PathValue("movieID")
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieUpdate)
+			return
+		}
+
+		res, err := db.ExecContext(r.Context(), `
+		UPDATE movie
+		SET title = ?, poster = ?, rows = ?, seats_per_row = ?
+		WHERE id = ?;
+		`, req.Title, req.Poster, req.Rows, req.SeatsPerRow, movID)
+		if err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieUpdate)
+			return
+		}
+
+		rowsaffected, err := res.RowsAffected()
+		if err != nil {
+			log.Print(err)
+			utils.WriteError(w, http.StatusInternalServerError, errFailedMovieUpdate)
+			return
+		}
+		if rowsaffected == 0 {
+			utils.WriteError(w, http.StatusNotFound, errMovieNotFound)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	})
 }

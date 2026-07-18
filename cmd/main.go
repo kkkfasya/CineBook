@@ -20,7 +20,7 @@ const PORT = ":8080"
 const DB_NAME = "movies.db"
 
 func main() {
-	os.Remove("movies.db") // in-memory does not work somehow
+	os.Remove("movies.db") // in-memory does not work as expected somehow
 	db, err := sql.Open("sqlite3", "movies.db")
 	if err != nil {
 		log.Fatal(err)
@@ -44,7 +44,6 @@ func main() {
 	handler := booking.NewHandler(svc)
 
 	mux := http.NewServeMux()
-	// authGuard := mw.RequiresAdmin()
 	basicAuth := mw.BasicAuth(utils.GetAdminCredsEnv())
 
 	//TODO: use go embed to serve this static file
@@ -72,15 +71,9 @@ func main() {
 
 	// admin movies CRUD
 	mux.Handle("GET /api/v1/admin/movies", handler.ListMovies(db))
-	mux.HandleFunc("POST /api/v1/admin/movies", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	})
-	mux.HandleFunc("PUT /api/v1/admin/movies/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	})
-	mux.HandleFunc("DELETE /api/v1/admin/movies/{id}", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-	})
+	mux.Handle("POST /api/v1/admin/movies", handler.AddMovie(db))
+	mux.Handle("PUT /api/v1/admin/movies/{movieID}", handler.UpdateMovie(db))
+	mux.Handle("DELETE /api/v1/admin/movies/{movieID}", handler.DeleteMovie(db))
 
 	log.Printf("server started at http://localhost%s\n", PORT)
 	if err := http.ListenAndServe(PORT, mw.StripTrailingSlash(mux)); err != nil {
