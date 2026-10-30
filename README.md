@@ -72,10 +72,11 @@ Better auth method will be implemented in the future
    docker compose up -d
    ```
 
-4. Run the server:
+4. Build the binary and run it:
 
    ```bash
-   go run cmd/main.go
+   make build
+   make run
    ```
 
    Or with live reload:
@@ -187,6 +188,14 @@ CineBook/
 make test        # run all tests verbosely
 make test_race   # run tests with race detector
 ```
+
+## Future Features
+- movie's start time and end time
+- syncing booked seats and movie time, should end when movie end
+- better auth method
+- user account
+- currency feature to simulate real cinema booking
+- better front-enf (low priority)
 
 ## Contributing
 

@@ -1,6 +1,13 @@
 # i only add this to remember the flag of go compiler
 
-.PHONY: test test_no_cache test_race
+.PHONY: test test_no_cache test_race build run
+
+build:
+	go build -o ./build/main ./cmd/
+
+run:
+	./build/main
+
 
 test:
 	go test ./... -v
