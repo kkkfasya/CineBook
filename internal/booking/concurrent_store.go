@@ -5,7 +5,7 @@ import (
 )
 
 // use Mutex for locking mechanism to prevent race condition
-// better yet use RWMutex if it's read-heavy or need multiple reader but one writer
+// better yet use RWMutex if it's read-heavy, needing multiple reader but one writer
 type ConcurrentStore struct {
 	sync.RWMutex
 	bookings map[string]Booking

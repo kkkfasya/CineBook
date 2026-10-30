@@ -28,7 +28,6 @@ func SeedMovieDB(db *sql.DB) error {
 		Rows   int
 		Seats  int
 	}{
-		{"Call Boy", "https://media.themoviedb.org/t/p/original/3fVRb3uoRDjbA9X95C88FOJ0rlZ.jpg", 3, 3},
 		{"Un homme qui dort", "https://media.themoviedb.org/t/p/original/rhsccTC8rpKAjmSCuyATDIyKhKZ.jpg", 6, 6},
 		{"The Green Ray", "https://media.themoviedb.org/t/p/original/1E3pliSC7lXWw6zJhMvG6ba0UNX.jpg", 2, 2},
 	}

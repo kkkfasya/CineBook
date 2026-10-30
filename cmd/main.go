@@ -20,13 +20,15 @@ const PORT = ":8080"
 const DB_NAME = "movies.db"
 
 func main() {
-	os.Remove("movies.db") // in-memory does not work as expected somehow
+	os.Remove("movies.db") // in-memory sqlite db does not work as expected somehow
 	db, err := sql.Open("sqlite3", "movies.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer db.Close()
+
+	// db seeding
 	if err := CreateMovieDB(db); err != nil {
 		log.Fatal(err)
 	}
